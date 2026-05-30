@@ -8,7 +8,6 @@ interface Props {
   scrim: Scrim;
   currentTeam: Team | null;
   onAccept?: () => void;
-  onConfirm?: () => void;
   onCancel?: () => void;
 }
 
@@ -35,7 +34,7 @@ function TeamBadge({ name }: { name: string }) {
   );
 }
 
-export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel }: Props) {
+export function ScrimCard({ scrim, currentTeam, onAccept, onCancel }: Props) {
   const isMyScrim =
     currentTeam &&
     (scrim.home_team === currentTeam || scrim.away_team === currentTeam);
@@ -69,7 +68,7 @@ export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel }:
         </div>
       </div>
 
-      {(onAccept || onConfirm || onCancel) && (
+      {(onAccept || onCancel) && (
         <div className="mt-3 pt-3 border-t border-slate-800 flex gap-2">
           {onAccept && (
             <button
@@ -77,14 +76,6 @@ export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel }:
               className="px-3 py-1.5 bg-accent-blue hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Accept
-            </button>
-          )}
-          {onConfirm && (
-            <button
-              onClick={onConfirm}
-              className="px-3 py-1.5 bg-accent-green hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              Confirm
             </button>
           )}
           {onCancel && (

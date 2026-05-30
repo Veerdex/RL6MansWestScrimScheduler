@@ -1,4 +1,4 @@
-export type ScrimStatus = 'open' | 'pending' | 'confirmed';
+export type ScrimStatus = 'pending' | 'confirmed';
 
 export interface Scrim {
   id: number;

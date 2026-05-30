@@ -16,7 +16,7 @@ export default function ScrimBoard() {
   const fetchScrims = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/scrims?status=open');
+      const res = await fetch('/api/scrims?status=pending');
       const data = await res.json();
       setScrims(data.scrims ?? []);
     } finally {
@@ -88,7 +88,7 @@ export default function ScrimBoard() {
                     scrim={s}
                     currentTeam={team}
                     onAccept={
-                      team && s.home_team !== team && s.status === 'open'
+                      team && s.home_team !== team && s.status === 'pending'
                         ? () => handleAccept(s.id)
                         : undefined
                     }

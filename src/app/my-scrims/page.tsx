@@ -50,11 +50,6 @@ export default function MyScrims() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [team]);
 
-  const handleConfirm = async (id: number) => {
-    await fetch(`/api/scrims/${id}/confirm`, { method: 'POST' });
-    fetchMyScrims();
-  };
-
   const handleCancel = async (id: number) => {
     await fetch(`/api/scrims/${id}`, { method: 'DELETE' });
     fetchMyScrims();
@@ -97,7 +92,6 @@ export default function MyScrims() {
                 key={s.id}
                 scrim={s}
                 currentTeam={team}
-                onConfirm={s.home_team === team ? () => handleConfirm(s.id) : undefined}
                 onCancel={() => handleCancel(s.id)}
               />
             )}

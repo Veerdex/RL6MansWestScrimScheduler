@@ -17,9 +17,6 @@ export async function GET(req: NextRequest) {
   if (team) {
     sql += ' AND (home_team = ? OR away_team = ?)';
     args.push(team, team);
-    if (!status) {
-      sql += " AND status IN ('open','pending','confirmed')";
-    }
   }
 
   sql += ' ORDER BY scheduled_at ASC';
@@ -41,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   const result = await db.execute({
     sql: `INSERT INTO scrims (home_team, scheduled_at, note, status)
-          VALUES (?, ?, ?, 'open') RETURNING *`,
+          VALUES (?, ?, ?, 'pending') RETURNING *`,
     args: [home_team, scheduled_at, note],
   });
 

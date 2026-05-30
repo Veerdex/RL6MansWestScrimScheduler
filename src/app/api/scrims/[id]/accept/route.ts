@@ -18,13 +18,13 @@ export async function POST(
 
   const scrim = existing.rows[0];
   if (!scrim) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (scrim.status !== 'open')
-    return NextResponse.json({ error: 'Scrim is not open' }, { status: 409 });
+  if (scrim.status !== 'pending')
+    return NextResponse.json({ error: 'Scrim is not available' }, { status: 409 });
   if (scrim.home_team === away_team)
     return NextResponse.json({ error: 'Cannot play yourself' }, { status: 400 });
 
   const result = await db.execute({
-    sql: `UPDATE scrims SET away_team = ?, status = 'pending' WHERE id = ? RETURNING *`,
+    sql: `UPDATE scrims SET away_team = ?, status = 'confirmed' WHERE id = ? RETURNING *`,
     args: [away_team, params.id],
   });
 

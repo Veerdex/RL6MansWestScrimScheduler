@@ -17,8 +17,10 @@ export async function initDb() {
       away_team TEXT,
       scheduled_at TEXT NOT NULL,
       note TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'open',
+      status TEXT NOT NULL DEFAULT 'pending',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
+  // migrate any legacy 'open' rows to 'pending'
+  await db.execute(`UPDATE scrims SET status = 'pending' WHERE status = 'open'`);
 }
