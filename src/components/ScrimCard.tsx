@@ -2,6 +2,7 @@
 
 import type { Scrim, Team } from '@/lib/types';
 import { TEAM_COLORS } from '@/lib/types';
+import { formatTime } from '@/lib/utils';
 
 interface Props {
   scrim: Scrim;
@@ -9,6 +10,7 @@ interface Props {
   onAccept?: () => void;
   onConfirm?: () => void;
   onCancel?: () => void;
+  timeOnly?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -16,16 +18,6 @@ const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-orange-500/20 text-orange-400',
   confirmed: 'bg-green-500/20 text-green-400',
 };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
 
 function TeamBadge({ name }: { name: string }) {
   const colors = TEAM_COLORS[name] ?? { badge: 'bg-slate-700 text-slate-300' };
@@ -36,7 +28,7 @@ function TeamBadge({ name }: { name: string }) {
   );
 }
 
-export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel }: Props) {
+export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel, timeOnly }: Props) {
   const isMyScrim =
     currentTeam &&
     (scrim.home_team === currentTeam || scrim.away_team === currentTeam);
@@ -64,7 +56,7 @@ export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel }:
             </span>
           </div>
 
-          <p className="text-slate-300 text-sm">{formatDate(scrim.scheduled_at)}</p>
+          <p className="text-slate-300 text-sm">{formatTime(scrim.scheduled_at)}</p>
 
           {scrim.note && <p className="text-slate-500 text-xs">{scrim.note}</p>}
         </div>

@@ -3,7 +3,30 @@
 import { useEffect, useState } from 'react';
 import { useTeam } from '@/components/TeamProvider';
 import { ScrimCard } from '@/components/ScrimCard';
+import { groupByDay } from '@/lib/utils';
 import type { Scrim } from '@/lib/types';
+
+function DayGroup({
+  scrims,
+  renderCard,
+}: {
+  scrims: Scrim[];
+  renderCard: (s: Scrim) => React.ReactNode;
+}) {
+  const groups = groupByDay(scrims);
+  return (
+    <div className="space-y-5">
+      {groups.map((group) => (
+        <div key={group.label}>
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            {group.label}
+          </h3>
+          <div className="space-y-3">{group.items.map(renderCard)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MyScrims() {
   const { team } = useTeam();
@@ -67,8 +90,9 @@ export default function MyScrims() {
         ) : pending.length === 0 ? (
           <p className="text-slate-600 text-sm">No pending scrims.</p>
         ) : (
-          <div className="space-y-3">
-            {pending.map((s) => (
+          <DayGroup
+            scrims={pending}
+            renderCard={(s) => (
               <ScrimCard
                 key={s.id}
                 scrim={s}
@@ -76,8 +100,8 @@ export default function MyScrims() {
                 onConfirm={s.home_team === team ? () => handleConfirm(s.id) : undefined}
                 onCancel={() => handleCancel(s.id)}
               />
-            ))}
-          </div>
+            )}
+          />
         )}
       </section>
 
@@ -91,11 +115,12 @@ export default function MyScrims() {
         ) : confirmed.length === 0 ? (
           <p className="text-slate-600 text-sm">No confirmed scrims yet.</p>
         ) : (
-          <div className="space-y-3">
-            {confirmed.map((s) => (
+          <DayGroup
+            scrims={confirmed}
+            renderCard={(s) => (
               <ScrimCard key={s.id} scrim={s} currentTeam={team} />
-            ))}
-          </div>
+            )}
+          />
         )}
       </section>
     </div>

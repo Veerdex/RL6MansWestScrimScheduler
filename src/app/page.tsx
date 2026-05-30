@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTeam } from '@/components/TeamProvider';
 import { PostScrimForm } from '@/components/PostScrimForm';
 import { ScrimCard } from '@/components/ScrimCard';
+import { groupByDay } from '@/lib/utils';
 import type { Scrim } from '@/lib/types';
 
 export default function ScrimBoard() {
@@ -36,6 +37,8 @@ export default function ScrimBoard() {
     });
     fetchScrims();
   };
+
+  const grouped = groupByDay(scrims);
 
   return (
     <div className="space-y-6">
@@ -72,18 +75,27 @@ export default function ScrimBoard() {
           <p>No open scrims right now. Be the first to post one!</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {scrims.map((s) => (
-            <ScrimCard
-              key={s.id}
-              scrim={s}
-              currentTeam={team}
-              onAccept={
-                team && s.home_team !== team && s.status === 'open'
-                  ? () => handleAccept(s.id)
-                  : undefined
-              }
-            />
+        <div className="space-y-6">
+          {grouped.map((group) => (
+            <div key={group.label}>
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                {group.label}
+              </h2>
+              <div className="space-y-3">
+                {group.items.map((s) => (
+                  <ScrimCard
+                    key={s.id}
+                    scrim={s}
+                    currentTeam={team}
+                    onAccept={
+                      team && s.home_team !== team && s.status === 'open'
+                        ? () => handleAccept(s.id)
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

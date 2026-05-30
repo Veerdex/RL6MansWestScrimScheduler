@@ -31,6 +31,7 @@ export function NavBar() {
           </span>
           {navLink('/', 'Scrim Board')}
           {navLink('/my-scrims', 'My Scrims')}
+          {navLink('/calendar', 'Calendar')}
         </div>
         {team && (
           <div className="flex items-center gap-2">
