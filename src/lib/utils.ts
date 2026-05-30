@@ -25,14 +25,14 @@ export function formatTime(dateStr: string): string {
 
 export function groupByDay<T extends { scheduled_at: string }>(
   items: T[]
-): { label: string; items: T[] }[] {
-  const groups = new Map<string, { label: string; items: T[] }>();
+): { key: string; label: string; items: T[] }[] {
+  const groups = new Map<string, { key: string; label: string; items: T[] }>();
 
   for (const item of items) {
     const d = new Date(item.scheduled_at);
     const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
     if (!groups.has(key)) {
-      groups.set(key, { label: getDayLabel(item.scheduled_at), items: [] });
+      groups.set(key, { key, label: getDayLabel(item.scheduled_at), items: [] });
     }
     groups.get(key)!.items.push(item);
   }

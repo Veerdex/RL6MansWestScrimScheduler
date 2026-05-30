@@ -17,7 +17,7 @@ function DayGroup({
   return (
     <div className="space-y-5">
       {groups.map((group) => (
-        <div key={group.label}>
+        <div key={group.key}>
           <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
             {group.label}
           </h3>

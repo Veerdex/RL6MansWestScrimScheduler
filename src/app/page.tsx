@@ -77,7 +77,7 @@ export default function ScrimBoard() {
       ) : (
         <div className="space-y-6">
           {grouped.map((group) => (
-            <div key={group.label}>
+            <div key={group.key}>
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 {group.label}
               </h2>

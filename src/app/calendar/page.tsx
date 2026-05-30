@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { ScrimCard } from '@/components/ScrimCard';
 import { useTeam } from '@/components/TeamProvider';
-import { formatTime } from '@/lib/utils';
 import type { Scrim } from '@/lib/types';
 
 function getNext7Days(): { date: Date; label: string }[] {
@@ -46,7 +45,7 @@ export default function CalendarPage() {
         const res = await fetch('/api/scrims');
         const data = await res.json();
         const all: Scrim[] = data.scrims ?? [];
-        setScrims(all.filter((s) => s.status === 'confirmed' || s.status === 'pending'));
+        setScrims(all.filter((s) => s.status === 'confirmed'));
       } finally {
         setLoading(false);
       }
