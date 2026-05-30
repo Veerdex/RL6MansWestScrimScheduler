@@ -48,7 +48,9 @@ export const TEAMS = [
 export type Team = (typeof TEAMS)[number];
 
 export function getTeamLogoUrl(name: string): string {
-  return `/teams/${encodeURIComponent(name)}/logo.png`;
+  // encodeURIComponent encodes $ as %24 which breaks static file lookup — $ is valid in URL paths
+  const encoded = encodeURIComponent(name).replace(/%24/g, '$');
+  return `/teams/${encoded}/logo.png`;
 }
 
 const BADGE_PALETTE = [
