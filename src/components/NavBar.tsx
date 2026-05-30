@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTeam } from './TeamProvider';
-import { TEAM_COLORS } from '@/lib/types';
+import { TEAM_COLORS, getTeamLogoUrl } from '@/lib/types';
 
 export function NavBar() {
   const pathname = usePathname();
@@ -36,9 +36,11 @@ export function NavBar() {
         {team && (
           <div className="flex items-center gap-2">
             <span
-              className={`text-xs px-2.5 py-1 rounded-full font-medium ${TEAM_COLORS[team]?.badge}`}
+              className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${TEAM_COLORS[team]?.badge}`}
             >
-              {team === 'Dogs' ? '🐶' : '🐱'} {team}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={getTeamLogoUrl(team)} alt={team} width={14} height={14} className="rounded object-contain" />
+              {team}
             </span>
             <button
               onClick={() => {

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Scrim, Team } from '@/lib/types';
-import { TEAM_COLORS } from '@/lib/types';
+import { TEAM_COLORS, getTeamLogoUrl } from '@/lib/types';
 import { formatTime } from '@/lib/utils';
 
 interface Props {
@@ -10,7 +10,6 @@ interface Props {
   onAccept?: () => void;
   onConfirm?: () => void;
   onCancel?: () => void;
-  timeOnly?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -22,13 +21,21 @@ const STATUS_STYLES: Record<string, string> = {
 function TeamBadge({ name }: { name: string }) {
   const colors = TEAM_COLORS[name] ?? { badge: 'bg-slate-700 text-slate-300' };
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colors.badge}`}>
-      {name === 'Dogs' ? '🐶' : name === 'Cats' ? '🐱' : '?'} {name}
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${colors.badge}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={getTeamLogoUrl(name)}
+        alt={name}
+        width={14}
+        height={14}
+        className="rounded object-contain"
+      />
+      {name}
     </span>
   );
 }
 
-export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel, timeOnly }: Props) {
+export function ScrimCard({ scrim, currentTeam, onAccept, onConfirm, onCancel }: Props) {
   const isMyScrim =
     currentTeam &&
     (scrim.home_team === currentTeam || scrim.away_team === currentTeam);
