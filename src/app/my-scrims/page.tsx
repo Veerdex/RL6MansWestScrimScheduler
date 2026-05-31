@@ -55,6 +55,15 @@ export default function MyScrims() {
     fetchMyScrims();
   };
 
+  const handleOptOut = async (id: number) => {
+    await fetch(`/api/scrims/${id}/unaccept`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ away_team: team }),
+    });
+    fetchMyScrims();
+  };
+
   if (!team) {
     return (
       <div className="text-center py-20 text-slate-400">
@@ -112,7 +121,12 @@ export default function MyScrims() {
           <DayGroup
             scrims={confirmed}
             renderCard={(s) => (
-              <ScrimCard key={s.id} scrim={s} currentTeam={team} />
+              <ScrimCard
+                key={s.id}
+                scrim={s}
+                currentTeam={team}
+                onOptOut={s.away_team === team ? () => handleOptOut(s.id) : undefined}
+              />
             )}
           />
         )}
