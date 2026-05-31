@@ -23,4 +23,10 @@ export async function initDb() {
   `);
   // migrate any legacy 'open' rows to 'pending'
   await db.execute(`UPDATE scrims SET status = 'pending' WHERE status = 'open'`);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS visits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      visited_at INTEGER NOT NULL DEFAULT (unixepoch())
+    )
+  `);
 }

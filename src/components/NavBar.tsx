@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTeam } from './TeamProvider';
 import { TEAM_COLORS, getTeamLogoUrl } from '@/lib/types';
+import { VisitCounter } from './VisitCounter';
 
 export function NavBar() {
   const pathname = usePathname();
@@ -33,7 +34,9 @@ export function NavBar() {
           {navLink('/my-scrims', 'My Scrims')}
           {navLink('/calendar', 'Calendar')}
         </div>
-        {team && (
+        <div className="flex items-center gap-4">
+          <VisitCounter />
+          {team && (
           <div className="flex items-center gap-2">
             <span
               className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${TEAM_COLORS[team]?.badge}`}
@@ -52,7 +55,8 @@ export function NavBar() {
               switch
             </button>
           </div>
-        )}
+          )}
+        </div>
       </div>
     </nav>
   );
