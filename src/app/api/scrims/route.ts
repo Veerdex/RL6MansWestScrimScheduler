@@ -22,7 +22,16 @@ export async function GET(req: NextRequest) {
   sql += ' ORDER BY scheduled_at ASC';
 
   const result = await db.execute({ sql, args });
-  return NextResponse.json({ scrims: result.rows });
+
+  const now = Date.now();
+  const ONE_HOUR = 60 * 60 * 1000;
+
+  const scrims = result.rows.filter((row) => {
+    const t = new Date(row.scheduled_at as string).getTime();
+    return row.status === 'confirmed' ? t + ONE_HOUR > now : t > now;
+  });
+
+  return NextResponse.json({ scrims });
 }
 
 export async function POST(req: NextRequest) {
