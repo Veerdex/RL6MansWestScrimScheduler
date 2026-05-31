@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTeam } from '@/components/TeamProvider';
 import { ScrimCard } from '@/components/ScrimCard';
+import { EditScrimForm } from '@/components/EditScrimForm';
 import { groupByDay } from '@/lib/utils';
 import type { Scrim } from '@/lib/types';
 
@@ -32,6 +33,7 @@ export default function MyScrims() {
   const { team } = useTeam();
   const [scrims, setScrims] = useState<Scrim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const fetchMyScrims = async () => {
     if (!team) return;
@@ -97,12 +99,21 @@ export default function MyScrims() {
           <DayGroup
             scrims={pending}
             renderCard={(s) => (
-              <ScrimCard
-                key={s.id}
-                scrim={s}
-                currentTeam={team}
-                onCancel={() => handleCancel(s.id)}
-              />
+              <div key={s.id}>
+                <ScrimCard
+                  scrim={s}
+                  currentTeam={team}
+                  onEdit={() => setEditingId(editingId === s.id ? null : s.id)}
+                  onCancel={() => handleCancel(s.id)}
+                />
+                {editingId === s.id && (
+                  <EditScrimForm
+                    scrim={s}
+                    onSaved={() => { setEditingId(null); fetchMyScrims(); }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                )}
+              </div>
             )}
           />
         )}
