@@ -56,7 +56,22 @@ function scrimEmbed(scrim: Record<string, unknown>) {
 
 // --- Command handlers ---
 
-async function handleSchedule(options: Record<string, unknown>, memberRoles: string[]) {
+async function dmUser(userId: string, content: string) {
+  const dmRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
+    method: 'POST',
+    headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipient_id: userId }),
+  });
+  const dm = await dmRes.json() as { id: string };
+  if (!dm.id) return;
+  await fetch(`https://discord.com/api/v10/channels/${dm.id}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+}
+
+async function handleSchedule(options: Record<string, unknown>, memberRoles: string[], userId: string) {
   const team = getTeamFromRoles(memberRoles);
   if (!team) return ephemeral("You don't have a team role assigned.");
 
@@ -70,9 +85,9 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
   if (scheduledAt < new Date()) return ephemeral('That time is in the past.');
 
   const result = await db.execute({
-    sql: `INSERT INTO scrims (home_team, scheduled_at, note, status)
-          VALUES (?, ?, ?, 'pending') RETURNING *`,
-    args: [team, scheduledAt.toISOString(), note],
+    sql: `INSERT INTO scrims (home_team, scheduled_at, note, status, discord_user_id)
+          VALUES (?, ?, ?, 'pending', ?) RETURNING *`,
+    args: [team, scheduledAt.toISOString(), note, userId],
   });
 
   const scrim = result.rows[0];
@@ -131,6 +146,13 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
     `${homeMention} your scrim has been accepted by **${updated.away_team}**!`,
     [embed]
   );
+
+  if (updated.discord_user_id) {
+    await dmUser(
+      updated.discord_user_id as string,
+      `Your scrim has been accepted! **${updated.home_team}** vs **${updated.away_team}** — <t:${ts}:F>`
+    );
+  }
 
   return ephemeral(`Accepted! **${updated.home_team}** vs **${team}** — <t:${ts}:F>`);
 }
@@ -233,12 +255,13 @@ export async function POST(req: NextRequest) {
   if (body.type === 2) {
     const commandName: string = body.data.name;
     const memberRoles: string[] = body.member?.roles ?? [];
+    const userId: string = body.member?.user?.id ?? '';
     const rawOptions: { name: string; value: unknown }[] = body.data.options ?? [];
     const options = Object.fromEntries(rawOptions.map((o) => [o.name, o.value]));
 
     try {
       switch (commandName) {
-        case 'schedule':   return await handleSchedule(options, memberRoles);
+        case 'schedule':   return await handleSchedule(options, memberRoles, userId);
         case 'scrims':     return await handleScrims();
         case 'accept':     return await handleAccept(options, memberRoles);
         case 'cancel':     return await handleCancel(options, memberRoles);

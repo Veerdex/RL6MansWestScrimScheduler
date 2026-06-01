@@ -23,6 +23,11 @@ export async function initDb() {
   `);
   // migrate any legacy 'open' rows to 'pending'
   await db.execute(`UPDATE scrims SET status = 'pending' WHERE status = 'open'`);
+  try {
+    await db.execute(`ALTER TABLE scrims ADD COLUMN discord_user_id TEXT`);
+  } catch {
+    // column already exists
+  }
   await db.execute(`
     CREATE TABLE IF NOT EXISTS visits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
