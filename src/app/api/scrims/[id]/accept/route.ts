@@ -1,29 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-
-async function removeOverlappingPending(
-  confirmedId: number | bigint,
-  confirmedAt: string,
-  homeTeam: string,
-  awayTeam: string
-) {
-  const confirmedStart = new Date(confirmedAt).getTime();
-  const confirmedEnd = confirmedStart + 60 * 60 * 1000; // treat as 1-hour block
-
-  const candidates = await db.execute({
-    sql: `SELECT id, scheduled_at, end_time FROM scrims
-          WHERE status = 'pending' AND home_team IN (?, ?) AND id != ?`,
-    args: [homeTeam, awayTeam, confirmedId],
-  });
-
-  for (const r of candidates.rows) {
-    const t = new Date(r.scheduled_at as string).getTime();
-    const e = r.end_time ? new Date(r.end_time as string).getTime() : t + 60 * 60 * 1000;
-    if (t < confirmedEnd && e > confirmedStart) {
-      await db.execute({ sql: 'DELETE FROM scrims WHERE id = ?', args: [r.id as number] });
-    }
-  }
-}
+import { db, removeOverlappingPending } from '@/lib/db';
 
 export async function POST(
   req: NextRequest,

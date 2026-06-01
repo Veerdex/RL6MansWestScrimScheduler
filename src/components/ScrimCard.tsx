@@ -14,7 +14,6 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  open: 'bg-blue-500/20 text-blue-400',
   pending: 'bg-orange-500/20 text-orange-400',
   confirmed: 'bg-green-500/20 text-green-400',
 };

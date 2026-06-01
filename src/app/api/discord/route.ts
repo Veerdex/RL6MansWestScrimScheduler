@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getTeamFromRoles, resolveScheduledAt, DAYS_OF_WEEK, TEAM_NAME_TO_ROLE } from '@/lib/discord-teams';
+import { removeOverlappingPending } from '@/lib/db';
 
 const PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY!;
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
@@ -139,7 +140,6 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
 }
 
 async function handleScrims() {
-  const now = Math.floor(Date.now() / 1000);
   const result = await db.execute(
     "SELECT * FROM scrims WHERE status = 'pending' ORDER BY scheduled_at ASC"
   );
@@ -177,8 +177,11 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
     }
     const minute = (options.minute as number) ?? 0;
     const ampm = (options.am_pm as 'AM' | 'PM') ?? 'PM';
-    const day = DAYS_OF_WEEK[new Date(scrim.scheduled_at as string).getDay()];
-    const chosenTime = resolveScheduledAt(hour, minute, ampm, day);
+    // Build chosen time directly from the scrim's date to avoid day-rollover issues
+    let h = hour % 12;
+    if (ampm === 'PM') h += 12;
+    const chosenTime = new Date(scrim.scheduled_at as string);
+    chosenTime.setHours(h, minute, 0, 0);
     const start = new Date(scrim.scheduled_at as string).getTime();
     const end = new Date(scrim.end_time as string).getTime();
     if (chosenTime.getTime() < start || chosenTime.getTime() > end) {
@@ -190,6 +193,7 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
     });
 
     const updated = result.rows[0];
+    await removeOverlappingPending(updated.id as number, updated.scheduled_at as string, scrim.home_team as string, team);
     const ts = Math.floor(new Date(updated.scheduled_at as string).getTime() / 1000);
     const embed = scrimEmbed(updated as Record<string, unknown>);
     const homeRoleId = TEAM_NAME_TO_ROLE[updated.home_team as string];
@@ -208,6 +212,7 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
   });
 
   const updated = result.rows[0];
+  await removeOverlappingPending(updated.id as number, updated.scheduled_at as string, scrim.home_team as string, team);
   const ts = Math.floor(new Date(updated.scheduled_at as string).getTime() / 1000);
   const embed = scrimEmbed(updated as Record<string, unknown>);
   const homeRoleId = TEAM_NAME_TO_ROLE[updated.home_team as string];
