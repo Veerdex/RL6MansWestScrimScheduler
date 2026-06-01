@@ -49,7 +49,10 @@ export function EditScrimForm({ scrim, onSaved, onCancel }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(getInitialDate(scrim.scheduled_at, dates));
   const [startTime, setStartTime] = useState(toTimeValue(scrim.scheduled_at));
   const [isRange, setIsRange] = useState(!!scrim.end_time);
-  const [endTime, setEndTime] = useState(scrim.end_time ? toTimeValue(scrim.end_time) : '');
+  const [duration, setDuration] = useState(() => {
+    if (!scrim.end_time) return 1;
+    return Math.max(1, Math.round((new Date(scrim.end_time).getTime() - new Date(scrim.scheduled_at).getTime()) / (60 * 60 * 1000)));
+  });
   const [note, setNote] = useState(scrim.note ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -57,12 +60,11 @@ export function EditScrimForm({ scrim, onSaved, onCancel }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !startTime) { setError('Pick a date and time.'); return; }
-    if (isRange && !endTime) { setError('Pick an end time.'); return; }
     setError('');
     setSubmitting(true);
 
     const scheduledAt = buildDateTime(selectedDate, startTime);
-    const endAt = isRange ? buildDateTime(selectedDate, endTime) : null;
+    const endAt = isRange ? new Date(scheduledAt.getTime() + duration * 60 * 60 * 1000) : null;
 
     try {
       const res = await fetch(`/api/scrims/${scrim.id}`, {
@@ -93,7 +95,7 @@ export function EditScrimForm({ scrim, onSaved, onCancel }: Props) {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => { setIsRange(false); setEndTime(''); }}
+          onClick={() => setIsRange(false)}
           className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
             !isRange ? 'bg-accent-blue border-accent-blue text-white' : 'bg-surface-card border-slate-700 text-slate-400 hover:border-slate-500'
           }`}
@@ -113,7 +115,18 @@ export function EditScrimForm({ scrim, onSaved, onCancel }: Props) {
 
       <TimePicker value={startTime} onChange={setStartTime} label={isRange ? 'Available from' : 'Time'} />
       {isRange && (
-        <TimePicker value={endTime} onChange={setEndTime} label="Available until" filterAfter={startTime} />
+        <div className="space-y-1">
+          <label className="text-sm text-slate-400">Duration</label>
+          <select
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            className="w-full bg-surface-card border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-blue"
+          >
+            {[1, 2, 3, 4, 5, 6].map((h) => (
+              <option key={h} value={h}>{h} hour{h !== 1 ? 's' : ''}</option>
+            ))}
+          </select>
+        </div>
       )}
 
       <div className="space-y-1">

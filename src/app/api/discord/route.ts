@@ -85,17 +85,11 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
   const hour = options.hour as number;
   const minute = (options.minute as number) ?? 0;
   const ampm = (options.am_pm as 'AM' | 'PM') ?? 'PM';
-  const endHour = options.end_hour as number | undefined;
-  const endMinute = (options.end_minute as number) ?? 0;
-  const endAmpm = (options.end_am_pm as 'AM' | 'PM') ?? 'PM';
+  const duration = options.duration as number | undefined;
   const note = (options.note as string) ?? '';
 
   const scheduledAt = resolveScheduledAt(hour, minute, ampm, day);
-  const endAt = endHour ? resolveScheduledAt(endHour, endMinute, endAmpm, day) : null;
-
-  if (endAt && endAt <= scheduledAt) {
-    return ephemeral('End time must be after start time.');
-  }
+  const endAt = duration ? new Date(scheduledAt.getTime() + duration * 60 * 60 * 1000) : null;
   if (scheduledAt < new Date()) return ephemeral('That time is in the past.');
 
   const result = await db.execute({

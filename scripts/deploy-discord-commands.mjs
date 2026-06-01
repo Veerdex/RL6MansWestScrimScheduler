@@ -47,33 +47,11 @@ const commands = [
         ],
       },
       {
-        name: 'end_hour',
-        description: 'End of availability window (1–12) — leave blank for a specific time',
+        name: 'duration',
+        description: 'How many hours available (e.g. 4 = from start time for 4 hours)',
         type: 4,
         required: false,
-        min_value: 1,
-        max_value: 12,
-      },
-      {
-        name: 'end_minute',
-        description: 'End minutes (default: 0)',
-        type: 4,
-        required: false,
-        choices: [
-          { name: '15', value: 15 },
-          { name: '30', value: 30 },
-          { name: '45', value: 45 },
-        ],
-      },
-      {
-        name: 'end_am_pm',
-        description: 'AM or PM for end time (default: PM)',
-        type: 3,
-        required: false,
-        choices: [
-          { name: 'AM', value: 'AM' },
-          { name: 'PM', value: 'PM' },
-        ],
+        choices: [1, 2, 3, 4, 5, 6].map((h) => ({ name: `${h} hour${h !== 1 ? 's' : ''}`, value: h })),
       },
       {
         name: 'day',
