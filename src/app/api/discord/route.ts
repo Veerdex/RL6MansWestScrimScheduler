@@ -33,8 +33,8 @@ function ephemeral(content: string) {
   return NextResponse.json({ type: 4, data: { content, flags: 64 } });
 }
 
-function reply(content: string, embeds?: object[]) {
-  return NextResponse.json({ type: 4, data: { content, embeds } });
+function reply(content: string, embeds?: object[], ephemeralFlag = false) {
+  return NextResponse.json({ type: 4, data: { content, embeds, ...(ephemeralFlag && { flags: 64 }) } });
 }
 
 // --- Scrim embed builder ---
@@ -148,10 +148,10 @@ async function handleScrims() {
     (r) => new Date(r.scheduled_at as string).getTime() > Date.now()
   );
 
-  if (active.length === 0) return reply('No open scrims right now.');
+  if (active.length === 0) return reply('No open scrims right now.', undefined, true);
 
   const embeds = active.slice(0, 10).map((s) => scrimEmbed(s as Record<string, unknown>));
-  return reply(`**${active.length} open scrim${active.length !== 1 ? 's' : ''}**`, embeds);
+  return reply(`**${active.length} open scrim${active.length !== 1 ? 's' : ''}**`, embeds, true);
 }
 
 async function handleAccept(options: Record<string, unknown>, memberRoles: string[]) {
@@ -287,7 +287,7 @@ async function handleMyScrims(memberRoles: string[]) {
   if (active.length === 0) return ephemeral(`**${team}** has no upcoming scrims.`);
 
   const embeds = active.slice(0, 10).map((s) => scrimEmbed(s as Record<string, unknown>));
-  return reply(`**${team}'s scrims** (${active.length} upcoming)`, embeds);
+  return reply(`**${team}'s scrims** (${active.length} upcoming)`, embeds, true);
 }
 
 function handleSite() {
