@@ -48,6 +48,11 @@ export const DAYS_OF_WEEK = [
   'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
 ] as const;
 
+// UTC offset for the league's timezone (e.g. -7 for US Pacific Daylight, -8 for Standard)
+const LEAGUE_UTC_OFFSET = Number(process.env.LEAGUE_UTC_OFFSET ?? '-7');
+const MS_PER_HOUR = 3600000;
+const MS_PER_DAY = 86400000;
+
 export function resolveScheduledAt(
   hour: number,
   minute: number,
@@ -57,28 +62,33 @@ export function resolveScheduledAt(
   let h = hour % 12;
   if (ampm === 'PM') h += 12;
 
-  const now = new Date();
+  // Shift now into league-local time so all comparisons are in the user's timezone
+  const nowUtcMs = Date.now();
+  const nowLeagueMs = nowUtcMs + LEAGUE_UTC_OFFSET * MS_PER_HOUR;
+  const nowLeague = new Date(nowLeagueMs);
+
+  // Midnight of today in league-local time (as a UTC ms value offset by the tz)
+  const leagueMidnight =
+    Date.UTC(nowLeague.getUTCFullYear(), nowLeague.getUTCMonth(), nowLeague.getUTCDate());
 
   if (day) {
-    const todayIndex = now.getDay();
+    const todayIndex = nowLeague.getUTCDay();
     const targetIndex = DAYS_OF_WEEK.indexOf(day as typeof DAYS_OF_WEEK[number]);
     let daysAhead = targetIndex - todayIndex;
     if (daysAhead < 0) daysAhead += 7;
-    if (daysAhead === 0) {
-      const candidate = new Date(now);
-      candidate.setHours(h, minute, 0, 0);
-      if (candidate <= now) daysAhead = 7;
+
+    let candidateLeagueMs = leagueMidnight + daysAhead * MS_PER_DAY + h * MS_PER_HOUR + minute * 60000;
+    if (daysAhead === 0 && candidateLeagueMs <= nowLeagueMs) {
+      candidateLeagueMs += 7 * MS_PER_DAY;
     }
-    const date = new Date(now);
-    date.setDate(now.getDate() + daysAhead);
-    date.setHours(h, minute, 0, 0);
-    return date;
+    // Convert league-local ms back to real UTC
+    return new Date(candidateLeagueMs - LEAGUE_UTC_OFFSET * MS_PER_HOUR);
   }
 
-  // No day — use today if the time hasn't passed, otherwise tomorrow
-  const candidate = new Date(now);
-  candidate.setHours(h, minute, 0, 0);
-  if (candidate > now) return candidate;
-  candidate.setDate(candidate.getDate() + 1);
-  return candidate;
+  // No day — use today if time hasn't passed, otherwise tomorrow
+  const todayCandidateMs = leagueMidnight + h * MS_PER_HOUR + minute * 60000;
+  const resultLeagueMs = todayCandidateMs > nowLeagueMs
+    ? todayCandidateMs
+    : todayCandidateMs + MS_PER_DAY;
+  return new Date(resultLeagueMs - LEAGUE_UTC_OFFSET * MS_PER_HOUR);
 }
