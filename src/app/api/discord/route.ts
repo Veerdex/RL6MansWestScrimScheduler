@@ -47,7 +47,13 @@ function scrimEmbed(scrim: Record<string, unknown>) {
     fields: [
       { name: 'Home', value: scrim.home_team as string, inline: true },
       { name: 'Away', value: (scrim.away_team as string) ?? 'TBD', inline: true },
-      { name: 'Time', value: `<t:${ts}:F>`, inline: false },
+      {
+        name: 'Time',
+        value: scrim.end_time
+          ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> on <t:${ts}:D>`
+          : `<t:${ts}:F>`,
+        inline: false,
+      },
       ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
     ],
     footer: { text: `ID ${scrim.id} • ${isConfirmed ? 'Confirmed' : 'Pending'}` },
@@ -79,27 +85,38 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
   const hour = options.hour as number;
   const minute = (options.minute as number) ?? 0;
   const ampm = (options.am_pm as 'AM' | 'PM') ?? 'PM';
+  const endHour = options.end_hour as number | undefined;
+  const endMinute = (options.end_minute as number) ?? 0;
+  const endAmpm = (options.end_am_pm as 'AM' | 'PM') ?? 'PM';
   const note = (options.note as string) ?? '';
 
   const scheduledAt = resolveScheduledAt(hour, minute, ampm, day);
+  const endAt = endHour ? resolveScheduledAt(endHour, endMinute, endAmpm, day) : null;
+
+  if (endAt && endAt <= scheduledAt) {
+    return ephemeral('End time must be after start time.');
+  }
   if (scheduledAt < new Date()) return ephemeral('That time is in the past.');
 
   const result = await db.execute({
-    sql: `INSERT INTO scrims (home_team, scheduled_at, note, status, discord_user_id)
-          VALUES (?, ?, ?, 'pending', ?) RETURNING *`,
-    args: [team, scheduledAt.toISOString(), note, userId],
+    sql: `INSERT INTO scrims (home_team, scheduled_at, end_time, note, status, discord_user_id)
+          VALUES (?, ?, ?, ?, 'pending', ?) RETURNING *`,
+    args: [team, scheduledAt.toISOString(), endAt?.toISOString() ?? null, note, userId],
   });
 
   const scrim = result.rows[0];
   const ts = Math.floor(scheduledAt.getTime() / 1000);
   const embed = scrimEmbed(scrim as Record<string, unknown>);
+  const timeStr = endAt
+    ? `<t:${ts}:t> – <t:${Math.floor(endAt.getTime() / 1000)}:t>`
+    : `<t:${ts}:F>`;
 
   await sendChannelMessage(
     `<@&${SCRIM_ROLE_ID}> **${team}** is looking for a scrim!`,
     [embed]
   );
 
-  return ephemeral(`Scrim posted! ID: **${scrim.id}** — <t:${ts}:F>`);
+  return ephemeral(`Scrim posted! ID: **${scrim.id}** — ${timeStr}`);
 }
 
 async function handleScrims() {
@@ -131,6 +148,41 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
   if (scrim.home_team === team) return ephemeral("You can't accept your own scrim.");
   if (new Date(scrim.scheduled_at as string) < new Date()) return ephemeral('That scrim has already passed.');
 
+  // Range scrim — require a specific time
+  if (scrim.end_time) {
+    const hour = options.hour as number | undefined;
+    if (!hour) {
+      const startTs = Math.floor(new Date(scrim.scheduled_at as string).getTime() / 1000);
+      const endTs = Math.floor(new Date(scrim.end_time as string).getTime() / 1000);
+      return ephemeral(`This scrim has a time range: <t:${startTs}:t> – <t:${endTs}:t>. Use \`/accept id:${id} hour:X\` to specify your time.`);
+    }
+    const minute = (options.minute as number) ?? 0;
+    const ampm = (options.am_pm as 'AM' | 'PM') ?? 'PM';
+    const day = DAYS_OF_WEEK[new Date(scrim.scheduled_at as string).getDay()];
+    const chosenTime = resolveScheduledAt(hour, minute, ampm, day);
+    const start = new Date(scrim.scheduled_at as string).getTime();
+    const end = new Date(scrim.end_time as string).getTime();
+    if (chosenTime.getTime() < start || chosenTime.getTime() > end) {
+      return ephemeral('That time is outside the available range.');
+    }
+    const result = await db.execute({
+      sql: `UPDATE scrims SET away_team = ?, status = 'confirmed', scheduled_at = ?, end_time = NULL WHERE id = ? RETURNING *`,
+      args: [team, chosenTime.toISOString(), id],
+    });
+
+    const updated = result.rows[0];
+    const ts = Math.floor(new Date(updated.scheduled_at as string).getTime() / 1000);
+    const embed = scrimEmbed(updated as Record<string, unknown>);
+    const homeRoleId = TEAM_NAME_TO_ROLE[updated.home_team as string];
+    const homeMention = homeRoleId ? `<@&${homeRoleId}>` : `**${updated.home_team}**`;
+    await sendChannelMessage(`${homeMention} your scrim has been accepted by **${updated.away_team}**!`, [embed]);
+    if (updated.discord_user_id) {
+      await dmUser(updated.discord_user_id as string, `Your scrim has been accepted! **${updated.home_team}** vs **${updated.away_team}** — <t:${ts}:F>`);
+    }
+    return ephemeral(`Accepted! **${updated.home_team}** vs **${team}** — <t:${ts}:F>`);
+  }
+
+  // Specific-time scrim
   const result = await db.execute({
     sql: `UPDATE scrims SET away_team = ?, status = 'confirmed' WHERE id = ? RETURNING *`,
     args: [team, id],

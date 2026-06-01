@@ -25,9 +25,10 @@ export async function initDb() {
   await db.execute(`UPDATE scrims SET status = 'pending' WHERE status = 'open'`);
   try {
     await db.execute(`ALTER TABLE scrims ADD COLUMN discord_user_id TEXT`);
-  } catch {
-    // column already exists
-  }
+  } catch { /* column already exists */ }
+  try {
+    await db.execute(`ALTER TABLE scrims ADD COLUMN end_time TEXT`);
+  } catch { /* column already exists */ }
   await db.execute(`
     CREATE TABLE IF NOT EXISTS visits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -23,6 +23,11 @@ export function formatTime(dateStr: string): string {
   });
 }
 
+export function formatTimeRange(scheduledAt: string, endTime: string | null): string {
+  if (!endTime) return formatTime(scheduledAt);
+  return `${formatTime(scheduledAt)} – ${formatTime(endTime)}`;
+}
+
 export function groupByDay<T extends { scheduled_at: string }>(
   items: T[]
 ): { key: string; label: string; items: T[] }[] {

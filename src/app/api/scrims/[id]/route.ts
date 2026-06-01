@@ -5,16 +5,16 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { scheduled_at, note } = await req.json();
+  const { scheduled_at, end_time = null, note } = await req.json();
 
   if (!scheduled_at) {
     return NextResponse.json({ error: 'scheduled_at is required' }, { status: 400 });
   }
 
   const result = await db.execute({
-    sql: `UPDATE scrims SET scheduled_at = ?, note = ?
+    sql: `UPDATE scrims SET scheduled_at = ?, end_time = ?, note = ?
           WHERE id = ? AND status IN ('pending', 'confirmed') RETURNING *`,
-    args: [scheduled_at, note ?? '', params.id],
+    args: [scheduled_at, end_time, note ?? '', params.id],
   });
 
   if (result.rows.length === 0) {

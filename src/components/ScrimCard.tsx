@@ -2,7 +2,7 @@
 
 import type { Scrim, Team } from '@/lib/types';
 import { TEAM_COLORS, getTeamLogoUrl } from '@/lib/types';
-import { formatTime } from '@/lib/utils';
+import { formatTimeRange } from '@/lib/utils';
 
 interface Props {
   scrim: Scrim;
@@ -64,7 +64,7 @@ export function ScrimCard({ scrim, currentTeam, onAccept, onEdit, onOptOut, onCa
             </span>
           </div>
 
-          <p className="text-slate-300 text-sm">{formatTime(scrim.scheduled_at)}</p>
+          <p className="text-slate-300 text-sm">{formatTimeRange(scrim.scheduled_at, scrim.end_time)}</p>
 
           {scrim.note && <p className="text-slate-500 text-xs">{scrim.note}</p>}
         </div>

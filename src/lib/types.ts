@@ -5,9 +5,11 @@ export interface Scrim {
   home_team: string;
   away_team: string | null;
   scheduled_at: string;
+  end_time: string | null;
   note: string;
   status: ScrimStatus;
   created_at: string;
+  discord_user_id?: string | null;
 }
 
 export const TEAMS = [

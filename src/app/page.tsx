@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTeam } from '@/components/TeamProvider';
 import { PostScrimForm } from '@/components/PostScrimForm';
 import { ScrimCard } from '@/components/ScrimCard';
+import { AcceptTimeForm } from '@/components/AcceptTimeForm';
 import { groupByDay } from '@/lib/utils';
 import type { Scrim } from '@/lib/types';
 
@@ -12,6 +13,7 @@ export default function ScrimBoard() {
   const [scrims, setScrims] = useState<Scrim[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<number | null>(null);
 
   const fetchScrims = async () => {
     setLoading(true);
@@ -24,17 +26,16 @@ export default function ScrimBoard() {
     }
   };
 
-  useEffect(() => {
-    fetchScrims();
-  }, []);
+  useEffect(() => { fetchScrims(); }, []);
 
-  const handleAccept = async (id: number) => {
+  const handleAccept = async (id: number, time?: string) => {
     if (!team) return;
     await fetch(`/api/scrims/${id}/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ away_team: team }),
+      body: JSON.stringify({ away_team: team, ...(time ? { time } : {}) }),
     });
+    setAcceptingId(null);
     fetchScrims();
   };
 
@@ -58,13 +59,7 @@ export default function ScrimBoard() {
       </div>
 
       {showForm && team && (
-        <PostScrimForm
-          team={team}
-          onPosted={() => {
-            setShowForm(false);
-            fetchScrims();
-          }}
-        />
+        <PostScrimForm team={team} onPosted={() => { setShowForm(false); fetchScrims(); }} />
       )}
 
       {loading ? (
@@ -82,18 +77,31 @@ export default function ScrimBoard() {
                 {group.label}
               </h2>
               <div className="space-y-3">
-                {group.items.map((s) => (
-                  <ScrimCard
-                    key={s.id}
-                    scrim={s}
-                    currentTeam={team}
-                    onAccept={
-                      team && s.home_team !== team && s.status === 'pending'
-                        ? () => handleAccept(s.id)
-                        : undefined
-                    }
-                  />
-                ))}
+                {group.items.map((s) => {
+                  const canAccept = !!(team && s.home_team !== team && s.status === 'pending');
+                  return (
+                    <div key={s.id}>
+                      <ScrimCard
+                        scrim={s}
+                        currentTeam={team}
+                        onAccept={
+                          canAccept
+                            ? s.end_time
+                              ? () => setAcceptingId(acceptingId === s.id ? null : s.id)
+                              : () => handleAccept(s.id)
+                            : undefined
+                        }
+                      />
+                      {acceptingId === s.id && s.end_time && (
+                        <AcceptTimeForm
+                          scrim={s}
+                          onAccept={(time) => handleAccept(s.id, time)}
+                          onCancel={() => setAcceptingId(null)}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

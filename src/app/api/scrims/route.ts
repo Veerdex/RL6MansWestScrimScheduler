@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { home_team, scheduled_at, note = '' } = body;
+  const { home_team, scheduled_at, end_time = null, note = '' } = body;
 
   if (!home_team || !scheduled_at) {
     return NextResponse.json(
@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await db.execute({
-    sql: `INSERT INTO scrims (home_team, scheduled_at, note, status)
-          VALUES (?, ?, ?, 'pending') RETURNING *`,
-    args: [home_team, scheduled_at, note],
+    sql: `INSERT INTO scrims (home_team, scheduled_at, end_time, note, status)
+          VALUES (?, ?, ?, ?, 'pending') RETURNING *`,
+    args: [home_team, scheduled_at, end_time, note],
   });
 
   return NextResponse.json({ scrim: result.rows[0] }, { status: 201 });
