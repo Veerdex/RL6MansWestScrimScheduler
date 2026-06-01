@@ -110,7 +110,32 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
     [embed]
   );
 
-  return ephemeral(`Scrim posted! ID: **${scrim.id}** — ${timeStr}`);
+  // Check for overlapping scrims
+  const existing = await db.execute({
+    sql: `SELECT * FROM scrims WHERE status IN ('pending','confirmed') AND id != ? ORDER BY scheduled_at ASC`,
+    args: [scrim.id as number],
+  });
+  const newStart = scheduledAt.getTime();
+  const newEnd = endAt ? endAt.getTime() : newStart + 60 * 60 * 1000;
+  const conflicts = existing.rows.filter((r) => {
+    const t = new Date(r.scheduled_at as string).getTime();
+    const e = r.end_time ? new Date(r.end_time as string).getTime() : t + 60 * 60 * 1000;
+    return t < newEnd && e > newStart;
+  });
+
+  let reply = `Scrim posted! ID: **${scrim.id}** — ${timeStr}`;
+  if (conflicts.length > 0) {
+    reply += `\n\n⚠️ **Other scrims at this time:**`;
+    for (const c of conflicts) {
+      const ct = Math.floor(new Date(c.scheduled_at as string).getTime() / 1000);
+      const timeLabel = c.end_time
+        ? `<t:${ct}:t> – <t:${Math.floor(new Date(c.end_time as string).getTime() / 1000)}:t>`
+        : `<t:${ct}:t>`;
+      reply += `\n• ID ${c.id} — **${c.home_team}** ${timeLabel}`;
+    }
+  }
+
+  return ephemeral(reply);
 }
 
 async function handleScrims() {
@@ -260,6 +285,10 @@ async function handleMyScrims(memberRoles: string[]) {
   return reply(`**${team}'s scrims** (${active.length} upcoming)`, embeds);
 }
 
+function handleSite() {
+  return ephemeral('View and manage scrims on the web: **https://easyqueue.xyz**');
+}
+
 // --- Main route handler ---
 
 export async function POST(req: NextRequest) {
@@ -313,6 +342,7 @@ export async function POST(req: NextRequest) {
         case 'cancel':     return await handleCancel(options, memberRoles);
         case 'optout':     return await handleOptOut(options, memberRoles);
         case 'myscrims':   return await handleMyScrims(memberRoles);
+        case 'site':       return handleSite();
         default:           return ephemeral('Unknown command.');
       }
     } catch (err) {
