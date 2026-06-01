@@ -44,6 +44,7 @@ function scrimEmbed(scrim: Record<string, unknown>) {
   const ts = Math.floor(time.getTime() / 1000);
   const isConfirmed = scrim.status === 'confirmed';
   return {
+    title: `Scrim #${scrim.id}`,
     color: isConfirmed ? 0x22c55e : 0xf97316,
     fields: [
       { name: 'Home', value: scrim.home_team as string, inline: true },
@@ -57,7 +58,7 @@ function scrimEmbed(scrim: Record<string, unknown>) {
       },
       ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
     ],
-    footer: { text: `ID ${scrim.id} • ${isConfirmed ? 'Confirmed' : 'Pending'}` },
+    footer: { text: isConfirmed ? 'Confirmed' : 'Pending — use /accept id to claim this scrim' },
   };
 }
 
