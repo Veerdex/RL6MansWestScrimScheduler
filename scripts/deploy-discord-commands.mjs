@@ -18,13 +18,6 @@ const commands = [
     description: 'Post a scrim for your team',
     options: [
       {
-        name: 'day',
-        description: 'Day of the week',
-        type: 3, // STRING
-        required: true,
-        choices: DAYS.map((d) => ({ name: d, value: d })),
-      },
-      {
         name: 'hour',
         description: 'Hour (1–12)',
         type: 4, // INTEGER
@@ -52,6 +45,13 @@ const commands = [
           { name: 'AM', value: 'AM' },
           { name: 'PM', value: 'PM' },
         ],
+      },
+      {
+        name: 'day',
+        description: 'Day of the week (default: today or tomorrow based on hour)',
+        type: 3,
+        required: false,
+        choices: DAYS.map((d) => ({ name: d, value: d })),
       },
       {
         name: 'note',

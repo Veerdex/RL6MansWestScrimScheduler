@@ -45,30 +45,36 @@ export const DAYS_OF_WEEK = [
 ] as const;
 
 export function resolveScheduledAt(
-  day: string,
   hour: number,
   minute: number,
-  ampm: 'AM' | 'PM'
+  ampm: 'AM' | 'PM',
+  day?: string
 ): Date {
   let h = hour % 12;
   if (ampm === 'PM') h += 12;
 
   const now = new Date();
-  const todayIndex = now.getDay();
-  const targetIndex = DAYS_OF_WEEK.indexOf(day as typeof DAYS_OF_WEEK[number]);
 
-  let daysAhead = targetIndex - todayIndex;
-  if (daysAhead < 0) daysAhead += 7;
-
-  // if same day but time already passed, push to next week
-  if (daysAhead === 0) {
-    const candidate = new Date(now);
-    candidate.setHours(h, minute, 0, 0);
-    if (candidate <= now) daysAhead = 7;
+  if (day) {
+    const todayIndex = now.getDay();
+    const targetIndex = DAYS_OF_WEEK.indexOf(day as typeof DAYS_OF_WEEK[number]);
+    let daysAhead = targetIndex - todayIndex;
+    if (daysAhead < 0) daysAhead += 7;
+    if (daysAhead === 0) {
+      const candidate = new Date(now);
+      candidate.setHours(h, minute, 0, 0);
+      if (candidate <= now) daysAhead = 7;
+    }
+    const date = new Date(now);
+    date.setDate(now.getDate() + daysAhead);
+    date.setHours(h, minute, 0, 0);
+    return date;
   }
 
-  const date = new Date(now);
-  date.setDate(now.getDate() + daysAhead);
-  date.setHours(h, minute, 0, 0);
-  return date;
+  // No day — use today if the time hasn't passed, otherwise tomorrow
+  const candidate = new Date(now);
+  candidate.setHours(h, minute, 0, 0);
+  if (candidate > now) return candidate;
+  candidate.setDate(candidate.getDate() + 1);
+  return candidate;
 }

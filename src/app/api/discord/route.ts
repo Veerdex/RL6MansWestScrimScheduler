@@ -60,13 +60,13 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
   const team = getTeamFromRoles(memberRoles);
   if (!team) return ephemeral("You don't have a team role assigned.");
 
-  const day = options.day as string;
+  const day = options.day as string | undefined;
   const hour = options.hour as number;
   const minute = (options.minute as number) ?? 0;
   const ampm = (options.am_pm as 'AM' | 'PM') ?? 'PM';
   const note = (options.note as string) ?? '';
 
-  const scheduledAt = resolveScheduledAt(day, hour, minute, ampm);
+  const scheduledAt = resolveScheduledAt(hour, minute, ampm, day);
   if (scheduledAt < new Date()) return ephemeral('That time is in the past.');
 
   const result = await db.execute({
