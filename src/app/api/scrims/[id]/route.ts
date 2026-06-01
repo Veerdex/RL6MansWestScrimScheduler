@@ -13,7 +13,7 @@ export async function PATCH(
 
   const result = await db.execute({
     sql: `UPDATE scrims SET scheduled_at = ?, note = ?
-          WHERE id = ? AND status = 'pending' RETURNING *`,
+          WHERE id = ? AND status IN ('pending', 'confirmed') RETURNING *`,
     args: [scheduled_at, note ?? '', params.id],
   });
 

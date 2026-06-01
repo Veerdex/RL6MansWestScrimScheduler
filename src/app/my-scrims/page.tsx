@@ -132,12 +132,21 @@ export default function MyScrims() {
           <DayGroup
             scrims={confirmed}
             renderCard={(s) => (
-              <ScrimCard
-                key={s.id}
-                scrim={s}
-                currentTeam={team}
-                onOptOut={s.away_team === team ? () => handleOptOut(s.id) : undefined}
-              />
+              <div key={s.id}>
+                <ScrimCard
+                  scrim={s}
+                  currentTeam={team}
+                  onEdit={() => setEditingId(editingId === s.id ? null : s.id)}
+                  onOptOut={s.away_team === team ? () => handleOptOut(s.id) : undefined}
+                />
+                {editingId === s.id && (
+                  <EditScrimForm
+                    scrim={s}
+                    onSaved={() => { setEditingId(null); fetchMyScrims(); }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                )}
+              </div>
             )}
           />
         )}
