@@ -4,7 +4,7 @@ import { getTeamFromRoles, resolveScheduledAt, DAYS_OF_WEEK } from '@/lib/discor
 
 const PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY!;
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
-const CHANNEL_ID = '1507805898058240053';
+const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID!;
 const SCRIM_ROLE_ID = process.env.DISCORD_SCRIM_ROLE_ID!;
 
 function hexToBytes(hex: string): ArrayBuffer {
