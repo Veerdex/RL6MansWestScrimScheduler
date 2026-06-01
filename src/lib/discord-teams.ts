@@ -33,6 +33,10 @@ export const TEAM_ROLE_MAP: Record<string, string> = {
   '1504968895587684352': 'Full Send FC',
 };
 
+export const TEAM_NAME_TO_ROLE: Record<string, string> = Object.fromEntries(
+  Object.entries(TEAM_ROLE_MAP).map(([id, name]) => [name, id])
+);
+
 export function getTeamFromRoles(roleIds: string[]): string | null {
   for (const roleId of roleIds) {
     if (TEAM_ROLE_MAP[roleId]) return TEAM_ROLE_MAP[roleId];

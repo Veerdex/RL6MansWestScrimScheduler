@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getTeamFromRoles, resolveScheduledAt, DAYS_OF_WEEK } from '@/lib/discord-teams';
+import { getTeamFromRoles, resolveScheduledAt, DAYS_OF_WEEK, TEAM_NAME_TO_ROLE } from '@/lib/discord-teams';
 
 const PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY!;
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
@@ -124,9 +124,11 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
   const updated = result.rows[0];
   const ts = Math.floor(new Date(updated.scheduled_at as string).getTime() / 1000);
   const embed = scrimEmbed(updated as Record<string, unknown>);
+  const homeRoleId = TEAM_NAME_TO_ROLE[updated.home_team as string];
+  const homeMention = homeRoleId ? `<@&${homeRoleId}>` : `**${updated.home_team}**`;
 
   await sendChannelMessage(
-    `**${updated.home_team}** vs **${updated.away_team}** is confirmed!`,
+    `${homeMention} your scrim has been accepted by **${updated.away_team}**!`,
     [embed]
   );
 
