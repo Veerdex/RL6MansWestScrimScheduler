@@ -38,12 +38,11 @@ const commands = [
       },
       {
         name: 'am_pm',
-        description: 'AM or PM (default: PM)',
+        description: 'Only needed for AM — PM is default',
         type: 3,
         required: false,
         choices: [
           { name: 'AM', value: 'AM' },
-          { name: 'PM', value: 'PM' },
         ],
       },
       {
@@ -103,12 +102,11 @@ const commands = [
       },
       {
         name: 'am_pm',
-        description: 'AM or PM (default: PM)',
+        description: 'Only needed for AM — PM is default',
         type: 3,
         required: false,
         choices: [
           { name: 'AM', value: 'AM' },
-          { name: 'PM', value: 'PM' },
         ],
       },
     ],
