@@ -52,8 +52,8 @@ function scrimEmbed(scrim: Record<string, unknown>) {
       {
         name: 'Time',
         value: scrim.end_time
-          ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
-          : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`,
+          ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> on <t:${ts}:D>`
+          : `<t:${ts}:F>`,
         inline: false,
       },
       ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
@@ -249,8 +249,8 @@ async function handleCancel(options: Record<string, unknown>, memberRoles: strin
 
   const ts = Math.floor(new Date(scrim.scheduled_at as string).getTime() / 1000);
   const timeValue = scrim.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}**`
-    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> on <t:${ts}:D>`
+    : `<t:${ts}:F>`;
   await sendChannelMessage(
     `**${scrim.home_team}**'s scrim has been cancelled.`,
     [{
@@ -286,8 +286,8 @@ async function handleOptOut(options: Record<string, unknown>, memberRoles: strin
   const updated = result.rows[0];
   const ts = Math.floor(new Date(updated.scheduled_at as string).getTime() / 1000);
   const timeValue = updated.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(updated.end_time as string).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}**`
-    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(updated.end_time as string).getTime() / 1000)}:t> on <t:${ts}:D>`
+    : `<t:${ts}:F>`;
   await sendChannelMessage(
     `<@&${SCRIM_ROLE_ID}> **${updated.home_team}**'s scrim is back on the board!`,
     [{

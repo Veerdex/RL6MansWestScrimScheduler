@@ -1,4 +1,4 @@
-import { TEAM_NAME_TO_ROLE, LEAGUE_TZ_LABEL } from './discord-teams';
+import { TEAM_NAME_TO_ROLE } from './discord-teams';
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
@@ -26,6 +26,13 @@ async function dmUser(userId: string, content: string) {
   }
 }
 
+function timeValue(scheduled_at: string, end_time?: string | null): string {
+  const ts = Math.floor(new Date(scheduled_at).getTime() / 1000);
+  return end_time
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(end_time).getTime() / 1000)}:t> on <t:${ts}:D>`
+    : `<t:${ts}:F>`;
+}
+
 export async function notifyScrimPosted(scrim: {
   id: number | bigint;
   home_team: string;
@@ -34,10 +41,6 @@ export async function notifyScrimPosted(scrim: {
   note?: string | null;
 }) {
   if (!BOT_TOKEN || !CHANNEL_ID) return;
-  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
-  const timeValue = scrim.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
-    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
 
   await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     content: `<@&${SCRIM_ROLE_ID}> **${scrim.home_team}** is looking for a scrim!`,
@@ -47,7 +50,7 @@ export async function notifyScrimPosted(scrim: {
       fields: [
         { name: 'Home', value: scrim.home_team, inline: true },
         { name: 'Away', value: 'TBD', inline: true },
-        { name: 'Time', value: timeValue, inline: false },
+        { name: 'Time', value: timeValue(scrim.scheduled_at, scrim.end_time), inline: false },
         ...(scrim.note ? [{ name: 'Note', value: scrim.note }] : []),
       ],
       footer: { text: 'Pending — use /accept id to claim this scrim' },
@@ -76,7 +79,7 @@ export async function notifyScrimAccepted(scrim: {
       fields: [
         { name: 'Home', value: scrim.home_team, inline: true },
         { name: 'Away', value: scrim.away_team, inline: true },
-        { name: 'Time', value: `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`, inline: false },
+        { name: 'Time', value: timeValue(scrim.scheduled_at), inline: false },
         ...(scrim.note ? [{ name: 'Note', value: scrim.note }] : []),
       ],
       footer: { text: 'Confirmed' },
@@ -86,7 +89,7 @@ export async function notifyScrimAccepted(scrim: {
   if (scrim.discord_user_id) {
     await dmUser(
       scrim.discord_user_id,
-      `Your scrim has been accepted! **${scrim.home_team}** vs **${scrim.away_team}** — <t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`
+      `Your scrim has been accepted! **${scrim.home_team}** vs **${scrim.away_team}** — <t:${ts}:F>`
     );
   }
 }
@@ -98,10 +101,6 @@ export async function notifyScrimCancelled(scrim: {
   end_time?: string | null;
 }) {
   if (!BOT_TOKEN || !CHANNEL_ID) return;
-  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
-  const timeValue = scrim.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
-    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
 
   await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     content: `**${scrim.home_team}**'s scrim has been cancelled.`,
@@ -110,7 +109,7 @@ export async function notifyScrimCancelled(scrim: {
       color: 0xef4444,
       fields: [
         { name: 'Home', value: scrim.home_team, inline: true },
-        { name: 'Time', value: timeValue, inline: false },
+        { name: 'Time', value: timeValue(scrim.scheduled_at, scrim.end_time), inline: false },
       ],
     }],
   });
@@ -126,10 +125,6 @@ export async function notifyScrimEdited(scrim: {
   status: string;
 }) {
   if (!BOT_TOKEN || !CHANNEL_ID) return;
-  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
-  const timeValue = scrim.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
-    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
 
   await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     content: `**${scrim.home_team}**'s scrim time has been updated.`,
@@ -139,7 +134,7 @@ export async function notifyScrimEdited(scrim: {
       fields: [
         { name: 'Home', value: scrim.home_team, inline: true },
         { name: 'Away', value: scrim.away_team ?? 'TBD', inline: true },
-        { name: 'New Time', value: timeValue, inline: false },
+        { name: 'New Time', value: timeValue(scrim.scheduled_at, scrim.end_time), inline: false },
         ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
       ],
       footer: { text: scrim.status === 'confirmed' ? 'Confirmed' : 'Pending' },
@@ -155,10 +150,6 @@ export async function notifyScrimOptOut(scrim: {
   note?: string | null;
 }) {
   if (!BOT_TOKEN || !CHANNEL_ID) return;
-  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
-  const timeValue = scrim.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
-    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
 
   await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     content: `<@&${SCRIM_ROLE_ID}> **${scrim.home_team}**'s scrim is back on the board!`,
@@ -168,7 +159,7 @@ export async function notifyScrimOptOut(scrim: {
       fields: [
         { name: 'Home', value: scrim.home_team, inline: true },
         { name: 'Away', value: 'TBD', inline: true },
-        { name: 'Time', value: timeValue, inline: false },
+        { name: 'Time', value: timeValue(scrim.scheduled_at, scrim.end_time), inline: false },
         ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
       ],
       footer: { text: 'Pending — use /accept id to claim this scrim' },
