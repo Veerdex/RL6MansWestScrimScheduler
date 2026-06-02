@@ -33,6 +33,7 @@ export function NavBar() {
           {navLink('/', 'Scrim Board')}
           {navLink('/my-scrims', 'My Scrims')}
           {navLink('/calendar', 'Calendar')}
+          {navLink('/teams', 'Teams')}
         </div>
         <div className="flex items-center gap-4">
           <VisitCounter />
