@@ -146,6 +146,15 @@ const commands = [
   {
     name: 'help',
     description: 'Show all available bot commands and how to use them',
+    options: [
+      {
+        name: 'command',
+        description: 'Get detailed help for a specific command',
+        type: 3,
+        required: false,
+        choices: ['schedule','accept','cancel','optout','scrims','myscrims','site'].map((c) => ({ name: c, value: c })),
+      },
+    ],
   },
 ];
 

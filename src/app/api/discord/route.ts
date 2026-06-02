@@ -295,7 +295,78 @@ function handleSite() {
   return ephemeral('View and manage scrims on the web: **https://easyqueue.xyz**');
 }
 
-function handleHelp() {
+const COMMAND_HELP: Record<string, { title: string; color: number; fields: { name: string; value: string }[] }> = {
+  schedule: {
+    title: '📅 /schedule — Post a scrim',
+    color: 0x3b82f6,
+    fields: [
+      { name: 'hour (required)', value: 'The hour, 1–12. Defaults to PM.' },
+      { name: 'am_pm (optional)', value: 'Only needed if scheduling AM. Leave blank for PM.' },
+      { name: 'minute (optional)', value: 'Choose 15, 30, or 45. Defaults to :00.' },
+      { name: 'duration (optional)', value: 'Hours your team is available. e.g. `4` = 4-hour window starting at your hour. Leave blank for a specific time.' },
+      { name: 'day (optional)', value: 'Day of the week. Defaults to today if the time hasn\'t passed, otherwise tomorrow.' },
+      { name: 'note (optional)', value: 'Extra info e.g. "best of 5, no subs".' },
+      { name: 'Examples', value: '`/schedule hour:8` → 8 PM today\n`/schedule hour:3 am_pm:AM` → 3 AM\n`/schedule hour:5 duration:4` → available 5–9 PM' },
+    ],
+  },
+  accept: {
+    title: '✅ /accept — Accept a scrim',
+    color: 0x22c55e,
+    fields: [
+      { name: 'id (required)', value: 'The scrim ID shown in /scrims.' },
+      { name: 'hour (optional)', value: 'Required for range scrims — pick your preferred time within the window.' },
+      { name: 'minute (optional)', value: '15, 30, or 45. Defaults to :00.' },
+      { name: 'am_pm (optional)', value: 'Only needed for AM. Defaults to PM.' },
+      { name: 'Examples', value: '`/accept id:5` → accept a specific-time scrim\n`/accept id:5 hour:7` → accept a range scrim at 7 PM' },
+    ],
+  },
+  cancel: {
+    title: '❌ /cancel — Cancel your scrim',
+    color: 0xef4444,
+    fields: [
+      { name: 'id (required)', value: 'The ID of the pending scrim you posted.' },
+      { name: 'Note', value: 'You can only cancel scrims your team posted.' },
+    ],
+  },
+  optout: {
+    title: '🚪 /optout — Leave a confirmed scrim',
+    color: 0xf97316,
+    fields: [
+      { name: 'id (required)', value: 'The ID of the confirmed scrim you accepted.' },
+      { name: 'Note', value: 'Puts the scrim back on the board as pending so another team can accept.' },
+    ],
+  },
+  scrims: {
+    title: '📋 /scrims — View open scrims',
+    color: 0x3b82f6,
+    fields: [
+      { name: 'No parameters', value: 'Lists all pending scrims looking for opponents. Only you can see the response.' },
+    ],
+  },
+  myscrims: {
+    title: '🗂️ /myscrims — Your team\'s scrims',
+    color: 0x3b82f6,
+    fields: [
+      { name: 'No parameters', value: 'Shows your team\'s upcoming pending and confirmed scrims. Only you can see the response.' },
+    ],
+  },
+  site: {
+    title: '🌐 /site — Website link',
+    color: 0x3b82f6,
+    fields: [
+      { name: 'No parameters', value: 'Returns the link to the scrim scheduler website where you can view and manage scrims.' },
+    ],
+  },
+};
+
+function handleHelp(command?: string) {
+  if (command && COMMAND_HELP[command]) {
+    return NextResponse.json({
+      type: 4,
+      data: { flags: 64, embeds: [COMMAND_HELP[command]] },
+    });
+  }
+
   return NextResponse.json({
     type: 4,
     data: {
@@ -303,49 +374,16 @@ function handleHelp() {
       embeds: [{
         title: 'RL 6Mans West — Bot Commands',
         color: 0x3b82f6,
+        description: 'Use `/help command:name` for detailed help on any command.',
         fields: [
-          {
-            name: '📅 /schedule',
-            value: [
-              '`hour` — required (1–12, PM by default)',
-              '`am_pm` — add `AM` to override',
-              '`minute` — 15, 30, or 45 (default: 0)',
-              '`duration` — hours available e.g. `4` = 4-hour window',
-              '`day` — day of week (default: today or tomorrow)',
-              '`note` — optional e.g. best of 5',
-            ].join('\n'),
-            inline: false,
-          },
-          {
-            name: '✅ /accept `id`',
-            value: 'Accept an open scrim. For range scrims, add `hour` to pick your time within the window.',
-            inline: false,
-          },
-          {
-            name: '❌ /cancel `id`',
-            value: 'Cancel a pending scrim you posted.',
-            inline: false,
-          },
-          {
-            name: '🚪 /optout `id`',
-            value: 'Leave a confirmed scrim you accepted. Puts it back on the board.',
-            inline: false,
-          },
-          {
-            name: '📋 /scrims',
-            value: 'List all open scrims looking for opponents.',
-            inline: false,
-          },
-          {
-            name: '🗂️ /myscrims',
-            value: 'View your team\'s upcoming pending and confirmed scrims.',
-            inline: false,
-          },
-          {
-            name: '🌐 /site',
-            value: 'Get the link to the scrim scheduler website.',
-            inline: false,
-          },
+          { name: '📅 /schedule', value: 'Post a scrim for your team.', inline: true },
+          { name: '✅ /accept', value: 'Accept an open scrim.', inline: true },
+          { name: '❌ /cancel', value: 'Cancel a scrim you posted.', inline: true },
+          { name: '🚪 /optout', value: 'Leave a confirmed scrim.', inline: true },
+          { name: '📋 /scrims', value: 'List all open scrims.', inline: true },
+          { name: '🗂️ /myscrims', value: 'Your team\'s scrims.', inline: true },
+          { name: '🌐 /site', value: 'Get the website link.', inline: true },
+          { name: '❓ /help', value: 'Show this menu.', inline: true },
         ],
         footer: { text: 'All responses except /schedule announcements are only visible to you.' },
       }],
@@ -407,7 +445,7 @@ export async function POST(req: NextRequest) {
         case 'optout':     return await handleOptOut(options, memberRoles);
         case 'myscrims':   return await handleMyScrims(memberRoles);
         case 'site':       return handleSite();
-        case 'help':       return handleHelp();
+        case 'help':       return handleHelp(options.command as string | undefined);
         default:           return ephemeral('Unknown command.');
       }
     } catch (err) {
