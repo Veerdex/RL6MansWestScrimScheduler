@@ -36,8 +36,8 @@ export async function notifyScrimPosted(scrim: {
   if (!BOT_TOKEN || !CHANNEL_ID) return;
   const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
   const timeValue = scrim.end_time
-    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> PST on <t:${ts}:D>`
-    : `<t:${ts}:F> (PST)`;
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **PST** on <t:${ts}:D>`
+    : `<t:${ts}:F> (**PST**)`;
 
   await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     content: `<@&${SCRIM_ROLE_ID}> **${scrim.home_team}** is looking for a scrim!`,
@@ -76,7 +76,7 @@ export async function notifyScrimAccepted(scrim: {
       fields: [
         { name: 'Home', value: scrim.home_team, inline: true },
         { name: 'Away', value: scrim.away_team, inline: true },
-        { name: 'Time', value: `<t:${ts}:F> (PST)`, inline: false },
+        { name: 'Time', value: `<t:${ts}:F> (**PST**)`, inline: false },
         ...(scrim.note ? [{ name: 'Note', value: scrim.note }] : []),
       ],
       footer: { text: 'Confirmed' },
@@ -86,7 +86,7 @@ export async function notifyScrimAccepted(scrim: {
   if (scrim.discord_user_id) {
     await dmUser(
       scrim.discord_user_id,
-      `Your scrim has been accepted! **${scrim.home_team}** vs **${scrim.away_team}** — <t:${ts}:F> (PST)`
+      `Your scrim has been accepted! **${scrim.home_team}** vs **${scrim.away_team}** — <t:${ts}:F> (**PST**)`
     );
   }
 }
