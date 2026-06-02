@@ -143,6 +143,10 @@ const commands = [
     name: 'site',
     description: 'Get the link to the scrim scheduler website',
   },
+  {
+    name: 'help',
+    description: 'Show all available bot commands and how to use them',
+  },
 ];
 
 const url = `https://discord.com/api/v10/applications/${APP_ID}/guilds/${GUILD_ID}/commands`;

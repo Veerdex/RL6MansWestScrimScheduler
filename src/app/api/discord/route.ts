@@ -295,6 +295,64 @@ function handleSite() {
   return ephemeral('View and manage scrims on the web: **https://easyqueue.xyz**');
 }
 
+function handleHelp() {
+  return NextResponse.json({
+    type: 4,
+    data: {
+      flags: 64,
+      embeds: [{
+        title: 'RL 6Mans West — Bot Commands',
+        color: 0x3b82f6,
+        fields: [
+          {
+            name: '📅 /schedule',
+            value: [
+              '`hour` — required (1–12, PM by default)',
+              '`am_pm` — add `AM` to override',
+              '`minute` — 15, 30, or 45 (default: 0)',
+              '`duration` — hours available e.g. `4` = 4-hour window',
+              '`day` — day of week (default: today or tomorrow)',
+              '`note` — optional e.g. best of 5',
+            ].join('\n'),
+            inline: false,
+          },
+          {
+            name: '✅ /accept `id`',
+            value: 'Accept an open scrim. For range scrims, add `hour` to pick your time within the window.',
+            inline: false,
+          },
+          {
+            name: '❌ /cancel `id`',
+            value: 'Cancel a pending scrim you posted.',
+            inline: false,
+          },
+          {
+            name: '🚪 /optout `id`',
+            value: 'Leave a confirmed scrim you accepted. Puts it back on the board.',
+            inline: false,
+          },
+          {
+            name: '📋 /scrims',
+            value: 'List all open scrims looking for opponents.',
+            inline: false,
+          },
+          {
+            name: '🗂️ /myscrims',
+            value: 'View your team\'s upcoming pending and confirmed scrims.',
+            inline: false,
+          },
+          {
+            name: '🌐 /site',
+            value: 'Get the link to the scrim scheduler website.',
+            inline: false,
+          },
+        ],
+        footer: { text: 'All responses except /schedule announcements are only visible to you.' },
+      }],
+    },
+  });
+}
+
 // --- Main route handler ---
 
 export async function POST(req: NextRequest) {
@@ -349,6 +407,7 @@ export async function POST(req: NextRequest) {
         case 'optout':     return await handleOptOut(options, memberRoles);
         case 'myscrims':   return await handleMyScrims(memberRoles);
         case 'site':       return handleSite();
+        case 'help':       return handleHelp();
         default:           return ephemeral('Unknown command.');
       }
     } catch (err) {
