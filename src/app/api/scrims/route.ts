@@ -3,6 +3,17 @@ import { db } from '@/lib/db';
 import { notifyScrimPosted } from '@/lib/discord-notify';
 
 export async function GET(req: NextRequest) {
+  const now = Date.now();
+  const ONE_HOUR = 60 * 60 * 1000;
+  const cutoff = new Date(now - ONE_HOUR).toISOString();
+
+  const nowIso = new Date(now).toISOString();
+
+  await db.execute({
+    sql: `DELETE FROM scrims WHERE (status = 'confirmed' AND scheduled_at < ?) OR (status = 'pending' AND scheduled_at < ?)`,
+    args: [cutoff, nowIso],
+  });
+
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
   const team = searchParams.get('team');
@@ -24,15 +35,7 @@ export async function GET(req: NextRequest) {
 
   const result = await db.execute({ sql, args });
 
-  const now = Date.now();
-  const ONE_HOUR = 60 * 60 * 1000;
-
-  const scrims = result.rows.filter((row) => {
-    const t = new Date(row.scheduled_at as string).getTime();
-    return row.status === 'confirmed' ? t + ONE_HOUR > now : t > now;
-  });
-
-  return NextResponse.json({ scrims });
+  return NextResponse.json({ scrims: result.rows });
 }
 
 export async function POST(req: NextRequest) {
