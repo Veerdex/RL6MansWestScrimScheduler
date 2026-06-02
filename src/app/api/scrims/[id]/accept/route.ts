@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, removeOverlappingPending } from '@/lib/db';
+import { notifyScrimAccepted } from '@/lib/discord-notify';
 
 export async function POST(
   req: NextRequest,
@@ -41,6 +42,14 @@ export async function POST(
     });
     const confirmed = result.rows[0];
     await removeOverlappingPending(confirmed.id as number, confirmed.scheduled_at as string, scrim.home_team as string, away_team);
+    await notifyScrimAccepted({
+      id: confirmed.id as number,
+      home_team: confirmed.home_team as string,
+      away_team: confirmed.away_team as string,
+      scheduled_at: confirmed.scheduled_at as string,
+      note: confirmed.note as string,
+      discord_user_id: confirmed.discord_user_id as string | null,
+    });
     return NextResponse.json({ scrim: confirmed });
   }
 
@@ -51,5 +60,13 @@ export async function POST(
   });
   const confirmed = result.rows[0];
   await removeOverlappingPending(confirmed.id as number, confirmed.scheduled_at as string, scrim.home_team as string, away_team);
+  await notifyScrimAccepted({
+    id: confirmed.id as number,
+    home_team: confirmed.home_team as string,
+    away_team: confirmed.away_team as string,
+    scheduled_at: confirmed.scheduled_at as string,
+    note: confirmed.note as string,
+    discord_user_id: confirmed.discord_user_id as string | null,
+  });
   return NextResponse.json({ scrim: confirmed });
 }

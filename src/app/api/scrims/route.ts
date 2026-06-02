@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { notifyScrimPosted } from '@/lib/discord-notify';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -51,5 +52,13 @@ export async function POST(req: NextRequest) {
     args: [home_team, scheduled_at, end_time, note],
   });
 
-  return NextResponse.json({ scrim: result.rows[0] }, { status: 201 });
+  const posted = result.rows[0];
+  await notifyScrimPosted({
+    id: posted.id as number,
+    home_team: posted.home_team as string,
+    scheduled_at: posted.scheduled_at as string,
+    end_time: posted.end_time as string | null,
+    note: posted.note as string,
+  });
+  return NextResponse.json({ scrim: posted }, { status: 201 });
 }
