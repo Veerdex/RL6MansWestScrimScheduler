@@ -20,12 +20,22 @@ export function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   });
 }
 
 export function formatTimeRange(scheduledAt: string, endTime: string | null): string {
   if (!endTime) return formatTime(scheduledAt);
-  return `${formatTime(scheduledAt)} – ${formatTime(endTime)}`;
+  const start = new Date(scheduledAt).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  const end = new Date(endTime).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+  return `${start} – ${end}`;
 }
 
 export function groupByDay<T extends { scheduled_at: string }>(
