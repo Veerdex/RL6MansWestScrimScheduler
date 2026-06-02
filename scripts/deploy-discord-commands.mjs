@@ -19,7 +19,7 @@ const commands = [
     options: [
       {
         name: 'hour',
-        description: 'Hour (1–12)',
+        description: 'Hour 1–12 (PST)',
         type: 4, // INTEGER
         required: true,
         min_value: 1,
