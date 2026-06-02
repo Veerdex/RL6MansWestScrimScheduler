@@ -50,6 +50,7 @@ export const DAYS_OF_WEEK = [
 
 // UTC offset for the league's timezone (e.g. -7 for US Pacific Daylight, -8 for Standard)
 const LEAGUE_UTC_OFFSET = Number(process.env.LEAGUE_UTC_OFFSET ?? '-7');
+export const LEAGUE_TZ_LABEL = LEAGUE_UTC_OFFSET === -8 ? 'PST' : 'PDT';
 const MS_PER_HOUR = 3600000;
 const MS_PER_DAY = 86400000;
 
