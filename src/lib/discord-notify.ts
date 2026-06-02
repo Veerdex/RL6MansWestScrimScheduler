@@ -90,3 +90,32 @@ export async function notifyScrimAccepted(scrim: {
     );
   }
 }
+
+export async function notifyScrimOptOut(scrim: {
+  id: number | bigint;
+  home_team: string;
+  scheduled_at: string;
+  end_time?: string | null;
+  note?: string | null;
+}) {
+  if (!BOT_TOKEN || !CHANNEL_ID) return;
+  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
+  const timeValue = scrim.end_time
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
+    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+
+  await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+    content: `<@&${SCRIM_ROLE_ID}> **${scrim.home_team}**'s scrim is back on the board!`,
+    embeds: [{
+      title: `Scrim #${scrim.id}`,
+      color: 0xf97316,
+      fields: [
+        { name: 'Home', value: scrim.home_team, inline: true },
+        { name: 'Away', value: 'TBD', inline: true },
+        { name: 'Time', value: timeValue, inline: false },
+        ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
+      ],
+      footer: { text: 'Pending — use /accept id to claim this scrim' },
+    }],
+  });
+}

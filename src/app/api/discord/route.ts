@@ -261,10 +261,30 @@ async function handleOptOut(options: Record<string, unknown>, memberRoles: strin
   if (scrim.away_team !== team) return ephemeral("You're not the away team on that scrim.");
   if (scrim.status !== 'confirmed') return ephemeral('That scrim is not confirmed.');
 
-  await db.execute({
-    sql: `UPDATE scrims SET away_team = NULL, status = 'pending' WHERE id = ?`,
+  const result = await db.execute({
+    sql: `UPDATE scrims SET away_team = NULL, status = 'pending' WHERE id = ? RETURNING *`,
     args: [id],
   });
+
+  const updated = result.rows[0];
+  const ts = Math.floor(new Date(updated.scheduled_at as string).getTime() / 1000);
+  const timeValue = updated.end_time
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(updated.end_time as string).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}**`
+    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+  await sendChannelMessage(
+    `<@&${SCRIM_ROLE_ID}> **${updated.home_team}**'s scrim is back on the board!`,
+    [{
+      title: `Scrim #${updated.id}`,
+      color: 0xf97316,
+      fields: [
+        { name: 'Home', value: updated.home_team as string, inline: true },
+        { name: 'Away', value: 'TBD', inline: true },
+        { name: 'Time', value: timeValue, inline: false },
+        ...(updated.note ? [{ name: 'Note', value: updated.note as string }] : []),
+      ],
+      footer: { text: 'Pending — use /accept id to claim this scrim' },
+    }]
+  );
 
   return ephemeral(`You've opted out of scrim #${id}. It's back on the board.`);
 }
@@ -273,22 +293,23 @@ async function handleMyScrims(memberRoles: string[]) {
   const team = getTeamFromRoles(memberRoles);
   if (!team) return ephemeral("You don't have a team role assigned.");
 
+  const now = Date.now();
+  const cutoff = new Date(now - 60 * 60 * 1000).toISOString();
+  const nowIso = new Date(now).toISOString();
+  await db.execute({
+    sql: `DELETE FROM scrims WHERE (status = 'confirmed' AND scheduled_at < ?) OR (status = 'pending' AND scheduled_at < ?)`,
+    args: [cutoff, nowIso],
+  });
+
   const result = await db.execute({
     sql: `SELECT * FROM scrims WHERE (home_team = ? OR away_team = ?) ORDER BY scheduled_at ASC`,
     args: [team, team],
   });
 
-  const now = Date.now();
-  const ONE_HOUR = 60 * 60 * 1000;
-  const active = result.rows.filter((r) => {
-    const t = new Date(r.scheduled_at as string).getTime();
-    return r.status === 'confirmed' ? t + ONE_HOUR > now : t > now;
-  });
+  if (result.rows.length === 0) return ephemeral(`**${team}** has no upcoming scrims.`);
 
-  if (active.length === 0) return ephemeral(`**${team}** has no upcoming scrims.`);
-
-  const embeds = active.slice(0, 10).map((s) => scrimEmbed(s as Record<string, unknown>));
-  return reply(`**${team}'s scrims** (${active.length} upcoming)`, embeds, true);
+  const embeds = result.rows.slice(0, 10).map((s) => scrimEmbed(s as Record<string, unknown>));
+  return reply(`**${team}'s scrims** (${result.rows.length} upcoming)`, embeds, true);
 }
 
 function handleSite() {

@@ -53,7 +53,11 @@ export default function MyScrims() {
   }, [team]);
 
   const handleCancel = async (id: number) => {
-    await fetch(`/api/scrims/${id}`, { method: 'DELETE' });
+    await fetch(`/api/scrims/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ home_team: team }),
+    });
     fetchMyScrims();
   };
 

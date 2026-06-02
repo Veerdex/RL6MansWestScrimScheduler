@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { notifyScrimOptOut } from '@/lib/discord-notify';
 
 export async function POST(
   req: NextRequest,
@@ -28,5 +29,14 @@ export async function POST(
     args: [params.id],
   });
 
-  return NextResponse.json({ scrim: result.rows[0] });
+  const updated = result.rows[0];
+  await notifyScrimOptOut({
+    id: updated.id as number,
+    home_team: updated.home_team as string,
+    scheduled_at: updated.scheduled_at as string,
+    end_time: updated.end_time as string | null,
+    note: updated.note as string,
+  });
+
+  return NextResponse.json({ scrim: updated });
 }

@@ -71,6 +71,7 @@ export function EditScrimForm({ scrim, onSaved, onCancel }: Props) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          home_team: scrim.home_team,
           scheduled_at: scheduledAt.toISOString(),
           end_time: endAt?.toISOString() ?? null,
           note,
