@@ -52,8 +52,8 @@ function scrimEmbed(scrim: Record<string, unknown>) {
       {
         name: 'Time',
         value: scrim.end_time
-          ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> on <t:${ts}:D>`
-          : `<t:${ts}:F>`,
+          ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> PST on <t:${ts}:D>`
+          : `<t:${ts}:F> (PST)`,
         inline: false,
       },
       ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
@@ -104,8 +104,8 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
   const ts = Math.floor(scheduledAt.getTime() / 1000);
   const embed = scrimEmbed(scrim as Record<string, unknown>);
   const timeStr = endAt
-    ? `<t:${ts}:t> – <t:${Math.floor(endAt.getTime() / 1000)}:t>`
-    : `<t:${ts}:F>`;
+    ? `<t:${ts}:t> – <t:${Math.floor(endAt.getTime() / 1000)}:t> PST`
+    : `<t:${ts}:F> (PST)`;
 
   await sendChannelMessage(
     `<@&${SCRIM_ROLE_ID}> **${team}** is looking for a scrim!`,
@@ -131,8 +131,8 @@ async function handleSchedule(options: Record<string, unknown>, memberRoles: str
     for (const c of conflicts) {
       const ct = Math.floor(new Date(c.scheduled_at as string).getTime() / 1000);
       const timeLabel = c.end_time
-        ? `<t:${ct}:t> – <t:${Math.floor(new Date(c.end_time as string).getTime() / 1000)}:t>`
-        : `<t:${ct}:t>`;
+        ? `<t:${ct}:t> – <t:${Math.floor(new Date(c.end_time as string).getTime() / 1000)}:t> PST`
+        : `<t:${ct}:t> PST`;
       reply += `\n• ID ${c.id} — **${c.home_team}** ${timeLabel}`;
     }
   }
@@ -174,7 +174,7 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
     if (!hour) {
       const startTs = Math.floor(new Date(scrim.scheduled_at as string).getTime() / 1000);
       const endTs = Math.floor(new Date(scrim.end_time as string).getTime() / 1000);
-      return ephemeral(`This scrim has a time range: <t:${startTs}:t> – <t:${endTs}:t>. Use \`/accept id:${id} hour:X\` to specify your time.`);
+      return ephemeral(`This scrim has a time range: <t:${startTs}:t> – <t:${endTs}:t> PST. Use \`/accept id:${id} hour:X\` to specify your time.`);
     }
     const minute = (options.minute as number) ?? 0;
     const ampm = (options.am_pm as 'AM' | 'PM') ?? 'PM';
@@ -201,9 +201,9 @@ async function handleAccept(options: Record<string, unknown>, memberRoles: strin
     const homeMention = homeRoleId ? `<@&${homeRoleId}>` : `**${updated.home_team}**`;
     await sendChannelMessage(`${homeMention} your scrim has been accepted by **${updated.away_team}**!`, [embed]);
     if (updated.discord_user_id) {
-      await dmUser(updated.discord_user_id as string, `Your scrim has been accepted! **${updated.home_team}** vs **${updated.away_team}** — <t:${ts}:F>`);
+      await dmUser(updated.discord_user_id as string, `Your scrim has been accepted! **${updated.home_team}** vs **${updated.away_team}** — <t:${ts}:F> (PST)`);
     }
-    return ephemeral(`Accepted! **${updated.home_team}** vs **${team}** — <t:${ts}:F>`);
+    return ephemeral(`Accepted! **${updated.home_team}** vs **${team}** — <t:${ts}:F> (PST)`);
   }
 
   // Specific-time scrim
