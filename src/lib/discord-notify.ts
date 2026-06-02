@@ -91,6 +91,62 @@ export async function notifyScrimAccepted(scrim: {
   }
 }
 
+export async function notifyScrimCancelled(scrim: {
+  id: number | bigint;
+  home_team: string;
+  scheduled_at: string;
+  end_time?: string | null;
+}) {
+  if (!BOT_TOKEN || !CHANNEL_ID) return;
+  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
+  const timeValue = scrim.end_time
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
+    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+
+  await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+    content: `**${scrim.home_team}**'s scrim has been cancelled.`,
+    embeds: [{
+      title: `Scrim #${scrim.id} — Cancelled`,
+      color: 0xef4444,
+      fields: [
+        { name: 'Home', value: scrim.home_team, inline: true },
+        { name: 'Time', value: timeValue, inline: false },
+      ],
+    }],
+  });
+}
+
+export async function notifyScrimEdited(scrim: {
+  id: number | bigint;
+  home_team: string;
+  away_team?: string | null;
+  scheduled_at: string;
+  end_time?: string | null;
+  note?: string | null;
+  status: string;
+}) {
+  if (!BOT_TOKEN || !CHANNEL_ID) return;
+  const ts = Math.floor(new Date(scrim.scheduled_at).getTime() / 1000);
+  const timeValue = scrim.end_time
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}** on <t:${ts}:D>`
+    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+
+  await discordPost(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+    content: `**${scrim.home_team}**'s scrim time has been updated.`,
+    embeds: [{
+      title: `Scrim #${scrim.id} — Updated`,
+      color: 0x3b82f6,
+      fields: [
+        { name: 'Home', value: scrim.home_team, inline: true },
+        { name: 'Away', value: scrim.away_team ?? 'TBD', inline: true },
+        { name: 'New Time', value: timeValue, inline: false },
+        ...(scrim.note ? [{ name: 'Note', value: scrim.note as string }] : []),
+      ],
+      footer: { text: scrim.status === 'confirmed' ? 'Confirmed' : 'Pending' },
+    }],
+  });
+}
+
 export async function notifyScrimOptOut(scrim: {
   id: number | bigint;
   home_team: string;

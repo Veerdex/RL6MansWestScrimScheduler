@@ -246,6 +246,23 @@ async function handleCancel(options: Record<string, unknown>, memberRoles: strin
   if (scrim.home_team !== team) return ephemeral("You can only cancel scrims you posted.");
 
   await db.execute({ sql: 'DELETE FROM scrims WHERE id = ?', args: [id] });
+
+  const ts = Math.floor(new Date(scrim.scheduled_at as string).getTime() / 1000);
+  const timeValue = scrim.end_time
+    ? `<t:${ts}:t> – <t:${Math.floor(new Date(scrim.end_time as string).getTime() / 1000)}:t> **${LEAGUE_TZ_LABEL}**`
+    : `<t:${ts}:F> (**${LEAGUE_TZ_LABEL}**)`;
+  await sendChannelMessage(
+    `**${scrim.home_team}**'s scrim has been cancelled.`,
+    [{
+      title: `Scrim #${id} — Cancelled`,
+      color: 0xef4444,
+      fields: [
+        { name: 'Home', value: scrim.home_team as string, inline: true },
+        { name: 'Time', value: timeValue, inline: false },
+      ],
+    }]
+  );
+
   return ephemeral(`Scrim #${id} cancelled.`);
 }
 
